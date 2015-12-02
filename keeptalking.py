@@ -7,10 +7,10 @@ def hasVowel():
 def hasParallel():
     return 'y' in parallel
 
-num_bat=input("Number of batteries: ")
+num_bat=int(input("Number of batteries: "))
 serial=input("Serial number odd? y/n: ")
 serial2=input("Serial number has vowel? y/n:")
-parallel=input=("Is there a parallel port? y/n:")
+parallel=input("Is there a parallel port? y/n:")
 frk=input("Lit FRK indicator? y/n:")
 car=input("Lit CAR indicator? y/n:")
 
@@ -48,7 +48,7 @@ def wireModule():
             cut(4)
         elif wires.count('r') == 1 and wires.count('y') > 1:
             cut(1)
-        elif wires.count('b') == 0:
+        elif wires.count('k') == 0:
             cut(2)
         else:
             cut(1)
@@ -136,12 +136,11 @@ def firstModule():
 
 ###END FIRST###
 ###PASSWORD###
-possibleWords="""about after again below could every first found great house large learn never other place plant point right small sound spell still study their there these thing think three water where which world would write
-"""
+possibleWords="""about after again below could every first found great house large learn never other place plant point right small sound spell still study their there these thing think three water where which world would write"""
 def passModule():
-    wordsleft=possibleWords.split()
+    wordsLeft=possibleWords.split()
     characters=list(input("All possible first characters: ").strip().replace(" ", "").lower())
-    for word in wordsLeft:
+    for word in wordsLeft[:]:
         if word[0] not in characters:
             wordsLeft.remove(word)
     if len(wordsLeft) == 0:
@@ -151,7 +150,7 @@ def passModule():
         print("The password is",wordsLeft[0])
         return
     characters=list(input("All possible second characters: ").strip().replace(" ", "").lower())
-    for word in wordsLeft:
+    for word in wordsLeft[:]:
         if word[1] not in characters:
             wordsLeft.remove(word)
     if len(wordsLeft) == 0:
@@ -161,7 +160,7 @@ def passModule():
         print("The password is",wordsLeft[0])
         return
     characters=list(input("All possible third characters: ").strip().replace(" ", "").lower())
-    for word in wordsLeft:
+    for word in wordsLeft[:]:
         if word[2] not in characters:
             wordsLeft.remove(word)
     if len(wordsLeft) == 0:
@@ -171,7 +170,7 @@ def passModule():
         print("The password is",wordsLeft[0])
         return
     characters=list(input("All possible fourth characters: ").strip().replace(" ", "").lower())
-    for word in wordsLeft:
+    for word in wordsLeft[:]:
         if word[3] not in characters:
             wordsLeft.remove(word)
     if len(wordsLeft) == 0:
@@ -181,15 +180,15 @@ def passModule():
         print("The password is",wordsLeft[0])
         return
     characters=list(input("All possible fifth characters: ").strip().replace(" ", "").lower())
-    for word in wordsLeft:
+    for word in wordsLeft[:]:
         if word[4] not in characters:
             wordsLeft.remove(word)
-    if len(wordsLeft) == 0:
-        print("Mistake, try again")
-        return
-    elif len(wordsLeft) ==1:
+    if len(wordsLeft) ==1:
         print("The password is",wordsLeft[0])
-        return 
+        return
+    print("Mistake, try again")
+    return
+    
 ###END PASSWORD###
 ###MEMORY###
 def memoryModule():
@@ -303,10 +302,10 @@ simonLookUp={True: {0:{'r':'b','b':'r','g':'y','y':'g'},1:{'r':'y','b':'g','g':'
              False:{0:{'r':'b','b':'y','g':'g','y':'r'},1:{'r':'r','b':'b','g':'y','y':'g'},2:{'r':'y','b':'g','g':'b','y':'r'}}
              }
 def simonModule():
-    i=input("Input 0,1,2 to set strikes at any time, rgby for newest color, x to exit").strip().replace(" ", "").lower()
     s=0
     current=[]
     while 1:
+        i=input("Input 0,1,2 to set strikes at any time, rgby for newest color, x to exit").strip().replace(" ", "").lower()
         if 'x' in i:
             return
         if '0' in i:
@@ -330,8 +329,8 @@ def simonModule():
 def simonHelp(c,s):
     st=""
     for i in c:
-        st.join(simonLookUp[hasVowel()][s][i]).join(" ")
-        print(st)
+        st+=simonLookUp[hasVowel()][s][i]+" "
+    print(st)
     return
     
 ###END SIMON###
@@ -382,7 +381,7 @@ while 1:
     elif 's' in which:
         sequenceModule()
     elif 'p' in which:
-        passwordModule()
+        passModule()
     else:
         print("unrecognized command")
 
