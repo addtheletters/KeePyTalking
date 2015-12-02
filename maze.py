@@ -23,40 +23,10 @@ crossChar = "+"
 
 mazeCap = vWallChar + (borderChar + vWallChar) * MAZE_SIZE
 
-what = '''
-*.*.*.*.*.*
-.+.+.+.+.+.
-*.*.*.*.*.*
-.+.+.+.+.+.
-*.*.*.*.*.*
-.+.+.+.+.+.
-*.*.*.*.*.*
-.+.+.+.+.+.
-*.*.*.*.*.*
-.+.+.+.+.+.
-*.*.*.*.*.*
-'''
-
-what2= '''
-*.*.*|*.*.*
-.+-+.+.+-+-
-*|*.*|*.*.*
-.+.+-+-+-+.
-*|*.*|*.*.*
-.+-+.+.+-+.
-*|*.*.*|*.*
-.+-+-+-+-+.
-*.*.*|*.*|*
-.+-+.+.+-+.
-*.*|*.*|*.*
-'''
-
-
-mazepool = [what, what2]
 
 class MazeIdentifier():
 	def __init__(self):
-		mazes = {}
+		self.mazes = {}
 
 	def putMaze(self, dot1, dot2, maze):
 		self.mazes[(dot1, dot2)] = maze
@@ -64,7 +34,7 @@ class MazeIdentifier():
 	def getMaze(self, dot1, dot2):
 		if (dot1, dot2) in self.mazes:
 			return self.mazes[(dot1, dot2)]
-		elif (dot2, dot1) in mazes:
+		elif (dot2, dot1) in self.mazes:
 			return self.mazes[(dot2, dot1)]
 		else:
 			return None
@@ -169,11 +139,50 @@ def showMaze(maze):
 	return
 
 
+if __name__ == '__main__':
 
-Maze(empty=True).showAdjacency()
-for m in mazepool:
-	print("=====================THIS IS A BAR=====================")
-	wowmaze=Maze(m)
-	wowmaze.showAdjacency()
+	what = '''
+*.*.*.*.*.*
+.+.+.+.+.+.
+*.*.*.*.*.*
+.+.+.+.+.+.
+*.*.*.*.*.*
+.+.+.+.+.+.
+*.*.*.*.*.*
+.+.+.+.+.+.
+*.*.*.*.*.*
+.+.+.+.+.+.
+*.*.*.*.*.*
+'''
 
+	m1 = '''
+*.*.*|*.*.*
+.+-+.+.+-+-
+*|*.*|*.*.*
+.+.+-+-+-+.
+*|*.*|*.*.*
+.+-+.+.+-+.
+*|*.*.*|*.*
+.+-+-+-+-+.
+*.*.*|*.*|*
+.+-+.+.+-+.
+*.*|*.*|*.*
+'''
+
+	m2 = '''
+
+'''
+
+	midf = MazeIdentifier()
+	midf.putMaze( (1, 0), (2, 5), Maze(m1) )
+	midf.putMaze(  )
+
+
+	#midf.getMaze( (2, 5), (1, 0) ).showAdjacency()
+	#mazepool = [m1, m2]
+	#Maze(empty=True).showAdjacency()
+	#for m in mazepool:
+	#	print("=====================THIS IS A BAR=====================")
+	#	wowmaze=Maze(m)
+	#	wowmaze.showAdjacency()
 
