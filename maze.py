@@ -11,6 +11,8 @@
 # mazes are identifiable using 2 dots
 # 9 mazes exist
 
+banana_matrix = [["banana"] * (999*999)] * (999*999)
+
 class MazeDisplayer:
 	def __init__(self):
 		self.v_wall = "|" # vertical wall
@@ -18,14 +20,15 @@ class MazeDisplayer:
 		self.gap    = " " # lack of a wall
 		self.cross  = "+" # for display purposes, to space between horizontal 'lack of walls'
 		self.tile   = "*" # a floor tile in the maze
+		self.header = "="
 		self.header_size = 40
 		self.header_end  = 5
 
 	def mazeHeader(self, maze):
-		return "=" * (self.header_size-len(maze.getName())-self.header_end) + maze.getName() + "=" * (self.header_end)
+		return self.header * (self.header_size-len(maze.getName())-self.header_end) + maze.getName() + self.header * (self.header_end)
 
 	def mazeFooter(self, maze):
-		return "=" * (self.header_size)
+		return self.header * (self.header_size)
 
 	def mazeCap(self, maze):
 		return self.cross + (self.h_wall * (maze.getSize() * 2 - 1)) + self.cross
@@ -47,13 +50,17 @@ class MazeIdentifier:
 			return None
 
 class Maze:
-	def __init__(self, parseable="",empty=False, size=6, name="MAAAAZE"):
+
+	# this is static or something idk
+	dirs = {0:"up", 1:"right", 2:"down", 3:"left"}
+
+	def __init__(self, to_parse="",empty=False, size=6, name="MAAAAZE"):
 		self._name = name
 		self._size = size
 		self._adjacency = {}
 
-		if len(parseable) > 0:
-			self._parse(parseable)
+		if len(to_parse) > 0:
+			self._parse(to_parse)
 
 		if empty: # no walls between any cells
 			for i in range(self._size):
@@ -68,7 +75,6 @@ class Maze:
 		if abs(pos1[0] - pos2[0]) + abs(pos1[1] - pos2[1]) > 1:
 			return False
 		return True
-
 
 	def getName(self):
 		return self._name
@@ -110,6 +116,22 @@ class Maze:
 		if pos1 not in self._adjacency:
 			return False
 		return pos2 in self._adjacency[pos1]
+
+	def direction(self, pos1, pos2):
+		if not Maze.nextTo(pos1, pos2):
+			return None
+		d1 = pos1[0] - pos2[0]
+		if d1 == 1:
+			return 0 # up
+		if d1 == -1:
+			return 2 # down
+		d2 = pos1[1] - pos2[1]
+		if d2 == 1:
+			return 1 # right
+		if d2 == -1:
+			return 3 # left
+		print("[wrn] this shouldn't happen (couldn't determine direction of tile)")
+		return None
 
 	def showAdjacency(self):
 		for i in range(self._size):
@@ -182,9 +204,13 @@ if __name__ == '__main__':
 '''
 	
 	midf = MazeIdentifier()
-	midf.putMaze( (1, 0), (2, 5), Maze(m1) )
-	midf.getMaze( (2, 5), (1, 0) ).showAdjacency()
-	midf.getMaze( (2, 5), (1, 0) ).show(MazeDisplayer())
+	midf.putMaze( (1, 0), (2, 5), Maze(m1, name="maze1") )
+	maze1 = midf.getMaze( (2, 5), (1, 0) )
+	maze1.showAdjacency()
+	maze1.show(MazeDisplayer())
+
+	print( Maze.dirs[maze1.direction( (2, 4), (2, 3) )] )
+
 	#mazepool = [m1, m2]
 	#Maze(empty=True).showAdjacency()
 	#for m in mazepool:
