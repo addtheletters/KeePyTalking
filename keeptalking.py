@@ -127,7 +127,7 @@ table={"READY": "YES, OKAY, WHAT, MIDDLE, LEFT, PRESS, RIGHT, BLANK, READY, NO, 
 pos={1:"upper left", 2:"upper right", 3:"middle left", 4:"middle right", 5:"bottom left", 6:"bottom right"}
 def firstModule():
     display=input("The display says?").strip().replace(" ", "").lower()
-    word=input("Read the", pos[lookUp[display]]).strip().replace(" ", "").upper()
+    word=input("Read the "+ pos[lookUp[display]]).strip().replace(" ", "").upper()
     print(table[word])
     
     boo=input("Repeat? y/n")
@@ -234,7 +234,7 @@ def memoryModule():
         positionPressed.append(data[1:5].index(buttonPressed[0])+1)
         buttonPressed.append(buttonPressed[0])
         print("Press",buttonPressed[0])
-    elif data[0] == '2':
+    elif data[0] == '3':
         positionPressed.append(3)
         buttonPressed.append(data[3])
         print("Press",data[3])
@@ -346,9 +346,9 @@ def complicatedModule():
             x+=1
         if 'b' in i:
             x+=2
-        if 'l' in i:
-            x+=4
         if 's' in i:
+            x+=4
+        if 'l' in i:
             x+=8
         complicatedHelper(complicatedLookUp[x])
 def complicatedHelper(val):
