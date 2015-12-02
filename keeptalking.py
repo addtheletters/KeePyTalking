@@ -279,6 +279,11 @@ def memoryModule():
 occurences={"r":["c","b","a","ac","b","ac","abc","ab","b"],
             "b":["b","ac","b","a","b","bc","c","ac","a"],
             "k":["abc","ac","b","ac","b","bc","ab","c","c"]}
+def cut2(n):
+    if n:
+        return ("Cut")
+    else:
+        return ("Don't cut")
 def sequenceModule():
     ro=0
     bo=0
@@ -288,13 +293,13 @@ def sequenceModule():
         if data == 'x':
             return
         if data[0] == 'r':
-            print(data[-1] in occurences["r"][ro])
+            print(cut2(data[-1] in occurences["r"][ro]))
             ro+=1
         elif data[0] == 'b':
-            print(data[-1] in occurences['b'][bo])
+            print(cut2(data[-1] in occurences['b'][bo]))
             bo+=1
         else:
-            print(data[-1] in occurences['k'][ko])
+            print(cut2(data[-1] in occurences['k'][ko]))
             ko+=1
 ###END SEQUENCES
 ###SIMON###
@@ -338,7 +343,7 @@ def simonHelp(c,s):
 complicatedLookUp=['c','s','s','s','c','c','d','p','d','b','p','s','b','b','p','d']
 def complicatedModule():
     while 1:
-        i=input("x=exit, r=red, b=blue, l=LED on, s= start").strip().replace(" ", "").lower()
+        i=input("x=exit, r=red, b=blue, l=LED on, s=star").strip().replace(" ", "").lower()
         if 'x' in i:
             return
         x=0
@@ -363,7 +368,12 @@ def complicatedHelper(val):
     else:
         print("Don't cut")
 ###END COMPLICATED
+###MORSE###
+morse=['shell','halls','slick','trick','boxes','leaks','strobe','bistro','flick','bombs','break','brick','steak','sting', 'vector', 'beats']
 
+def morseModule():
+    return
+###END MORSE###
 while 1:
     which=input("Modules: (w)ire, (b)utton, s(i)mon, (f)irst, (m)emory, (c)omplicated, (s)equence, (p)assword").strip().replace(" ", "").lower()
     if "w" in which:
