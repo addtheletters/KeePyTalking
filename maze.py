@@ -11,13 +11,23 @@
 # mazes are identifiable using 2 dots
 # 9 mazes exist
 
-banana_matrix = [["banana"] * (999*999)] * (999*999)
+
+class Highlight:
+	def __init__(self, pos, char):
+		self._pos = pos
+		if len(char) == 1:
+			self._char = char
+		else:
+			self._char = char[0]
+
+# TODO: implement displayer so Highlight can make particular cells stand out
+# TODO: move 'show' function to MazeDisplayer
 
 class MazeDisplayer:
 	def __init__(self):
 		self.v_wall = "|" # vertical wall
 		self.h_wall = "-" # horizontal wall
-		self.gap    = " " # lack of a wall
+		self.gap    = "." # lack of a wall
 		self.cross  = "+" # for display purposes, to space between horizontal 'lack of walls'
 		self.tile   = "*" # a floor tile in the maze
 		self.header = "="
@@ -49,8 +59,51 @@ class MazeIdentifier:
 		else:
 			return None
 
-class Maze:
+from collections import deque
 
+class MazeSolver:
+	@staticmethod
+	def makePath(prev, src, dst):
+		path = [dst]
+		while path[len(path)-1] != src:
+			path.append( prev[path[len(path)-1]] )
+		return path[::-1]
+
+	def solve(self, maze, src, dst):
+		# find a series of edges that go from src to dst
+		# should return list of edges (pairs of vertices)
+		# OR return as a list of vertices
+		# first should be src, last should be dst
+		# with an existing edge from each to the following list element
+		raise NotImplementedError("MazeSolver is abstract, use an implementation of it")
+
+class BDFSSolver(MazeSolver):
+	def __init__(self, bfs=True):
+		self._bfs = bfs
+
+	def solve(self, maze, src, dst):
+		adj = maze.getAdjacency()
+		visited = []
+		prev = {} # where did we come from to get to the index?
+		toCheck = deque([src]) # queue
+		curr = src
+		while curr != dst:
+			if self._bfs:
+				curr = toCheck.popleft() # one line difference
+			else:
+				curr = toCheck.pop()
+
+			if curr in adj:
+				for nxt in adj[curr]:
+					if nxt not in visited:
+						visited.append( nxt )
+						toCheck.append( nxt )
+						prev[nxt] = curr
+			else:
+				continue
+		return MazeSolver.makePath(prev, src, dst)
+
+class Maze:
 	# this is static or something idk
 	dirs = {0:"up", 1:"right", 2:"down", 3:"left"}
 
@@ -81,6 +134,9 @@ class Maze:
 
 	def getSize(self):
 		return self._size
+
+	def getAdjacency(self):
+		return self._adjacency
 
 	def addToAdjacency(self, pos1, pos2):
 		if (not self.valid(pos1)) or (not self.valid(pos2)):
@@ -173,6 +229,27 @@ class Maze:
 		print(disp.mazeCap(self))
 		print(disp.mazeFooter(self))
 
+def verify_BFS_DFS_difference(maze):
+	bfs_wins = 0
+	dfs_wins = 0
+	print("starting bfs dfs test showdown")
+	for x1 in range(6):
+		for x2 in range(6):
+			for y1 in range(6):
+				for y2 in range(6):			
+					s1 = BDFSSolver(False).solve(maze, (x1, y1), (x2, y2))
+					s2 = BDFSSolver(True).solve(maze, (x1, y1), (x2, y2))
+					if len(s1) != len(s2):
+						#print("found!")
+						if len(s1) > len(s2):
+							bfs_wins += 1
+						else:
+							dfs_wins += 0
+	print("done")
+	print("bfs won " + str(bfs_wins) + " times")
+	print("dfs won " + str(dfs_wins) + " times (should be 0)")
+
+
 if __name__ == '__main__':
 
 	what = '''
@@ -202,14 +279,34 @@ if __name__ == '__main__':
 .+-+.+.+-+.
 *.*|*.*|*.*
 '''
+
+	t1 = '''
+*.*.*|*.*.*
+.+-+.+.+-+-
+*|*.*|*.*.*
+.+.+-+.+-+.
+*.*.*|*.*.*
+.+.+.+.+-+.
+*|*.*.*|*.*
+.+-+.+-+-+.
+*.*.*|*.*|*
+.+-+.+.+.+.
+*.*|*.*|*.*
+'''
+
 	
 	midf = MazeIdentifier()
-	midf.putMaze( (1, 0), (2, 5), Maze(m1, name="maze1") )
+	midf.putMaze( (1, 0), (2, 5), Maze(t1, name="maze1") )
 	maze1 = midf.getMaze( (2, 5), (1, 0) )
 	maze1.showAdjacency()
 	maze1.show(MazeDisplayer())
 
+	p1 = (1, 1)
+	p2 = (4, 5)
+
 	print( Maze.dirs[maze1.direction( (2, 4), (2, 3) )] )
+	
+	verify_BFS_DFS_difference(maze1)
 
 	#mazepool = [m1, m2]
 	#Maze(empty=True).showAdjacency()
@@ -217,4 +314,3 @@ if __name__ == '__main__':
 	#	print("=====================THIS IS A BAR=====================")
 	#	wowmaze=Maze(m)
 	#	wowmaze.showAdjacency()
-
