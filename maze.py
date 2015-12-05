@@ -64,10 +64,20 @@ from collections import deque
 class MazeSolver:
 	@staticmethod
 	def makePath(prev, src, dst):
-		path = [dst]
-		while path[len(path)-1] != src:
-			path.append( prev[path[len(path)-1]] )
-		return path[::-1]
+		path = deque([dst])
+		while path[0] != src:
+			path.appendleft( prev[path[0]] )
+		return list(path)
+
+	@staticmethod
+	def pathAsEdges(path):
+		edges = []
+		for i in range(len(path)-1):
+			edges.append( (path[i], path[i+1]) )
+		return edges
+
+	def id(self):
+		raise NotImplementedError("MazeSolver is abstract, provide an ID")
 
 	def solve(self, maze, src, dst):
 		# find a series of edges that go from src to dst
@@ -81,9 +91,15 @@ class BDFSSolver(MazeSolver):
 	def __init__(self, bfs=True):
 		self._bfs = bfs
 
+	def id(self):
+		if(self._bfs):
+			return "BFS"
+		else:
+			return "DFS"
+
 	def solve(self, maze, src, dst):
 		adj = maze.getAdjacency()
-		visited = []
+		visited = set() # where have we looed / enqueued?
 		prev = {} # where did we come from to get to the index?
 		toCheck = deque([src]) # queue
 		curr = src
@@ -96,16 +112,17 @@ class BDFSSolver(MazeSolver):
 			if curr in adj:
 				for nxt in adj[curr]:
 					if nxt not in visited:
-						visited.append( nxt )
+						visited.add( nxt )
 						toCheck.append( nxt )
-						prev[nxt] = curr
+						if nxt not in prev:
+							prev[nxt] = curr
 			else:
 				continue
 		return MazeSolver.makePath(prev, src, dst)
 
 class Maze:
 	# this is static or something idk
-	dirs = {0:"up", 1:"right", 2:"down", 3:"left"}
+	dirs = {0:"center", 1:"up", 2:"right", 3:"down", 4:"left"}
 
 	def __init__(self, to_parse="",empty=False, size=6, name="MAAAAZE"):
 		self._name = name
@@ -173,19 +190,22 @@ class Maze:
 			return False
 		return pos2 in self._adjacency[pos1]
 
-	def direction(self, pos1, pos2):
+	@staticmethod
+	def direction(pos1, pos2):
 		if not Maze.nextTo(pos1, pos2):
 			return None
+		if pos1 == pos2:
+			return 0
 		d1 = pos1[0] - pos2[0]
 		if d1 == 1:
-			return 0 # up
+			return 1 # up
 		if d1 == -1:
-			return 2 # down
+			return 3 # down
 		d2 = pos1[1] - pos2[1]
 		if d2 == 1:
-			return 1 # right
+			return 2 # right
 		if d2 == -1:
-			return 3 # left
+			return 4 # left
 		print("[wrn] this shouldn't happen (couldn't determine direction of tile)")
 		return None
 
@@ -229,25 +249,38 @@ class Maze:
 		print(disp.mazeCap(self))
 		print(disp.mazeFooter(self))
 
-def verify_BFS_DFS_difference(maze):
-	bfs_wins = 0
-	dfs_wins = 0
-	print("starting bfs dfs test showdown")
+
+import time
+
+def compare_solvers(maze, solver1, solver2):
+	wins_1 = 0
+	wins_2 = 0
+
+	time_1 = 0
+	time_2 = 0
+
+	print("starting test showdown between " + solver1.id() + " and " + solver2.id())
 	for x1 in range(6):
 		for x2 in range(6):
 			for y1 in range(6):
-				for y2 in range(6):			
-					s1 = BDFSSolver(False).solve(maze, (x1, y1), (x2, y2))
-					s2 = BDFSSolver(True).solve(maze, (x1, y1), (x2, y2))
+				for y2 in range(6):
+					s1_start = time.clock()
+					s1 = solver1.solve(maze, (x1, y1), (x2, y2))
+					s_middle = time.clock()
+					s2 = solver2.solve(maze, (x1, y1), (x2, y2))
+					s2_end = time.clock()
+
+					time_1 += s_middle - s1_start
+					time_2 += s2_end - s_middle
+
 					if len(s1) != len(s2):
-						#print("found!")
-						if len(s1) > len(s2):
-							bfs_wins += 1
+						if len(s1) < len(s2):
+							wins_1 += 1
 						else:
-							dfs_wins += 0
+							wins_2 += 1
 	print("done")
-	print("bfs won " + str(bfs_wins) + " times")
-	print("dfs won " + str(dfs_wins) + " times (should be 0)")
+	print(solver1.id() + " won " + str(wins_1) + " times, taking " + str(round(time_1,10)) + " arbitrary time units (seconds)")
+	print(solver2.id() + " won " + str(wins_2) + " times, taking " + str(round(time_2,10)) + " arbitrary time units (seconds)")
 
 
 if __name__ == '__main__':
@@ -305,12 +338,9 @@ if __name__ == '__main__':
 	p2 = (4, 5)
 
 	print( Maze.dirs[maze1.direction( (2, 4), (2, 3) )] )
-	
-	verify_BFS_DFS_difference(maze1)
+	compare_solvers(maze1, BDFSSolver(True), BDFSSolver(False))
 
-	#mazepool = [m1, m2]
-	#Maze(empty=True).showAdjacency()
-	#for m in mazepool:
-	#	print("=====================THIS IS A BAR=====================")
-	#	wowmaze=Maze(m)
-	#	wowmaze.showAdjacency()
+	# instructions = [ Maze.dirs[Maze.direction(edge[0], edge[1])] for edge in MazeSolver.pathAsEdges( BDFSSolver().solve(maze1, p1, p2) ) ]
+	print("way from " + str(p1) + " to " + str(p2) + " is " +str( instructions ) )
+	
+	
