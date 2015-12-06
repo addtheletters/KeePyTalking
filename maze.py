@@ -203,9 +203,9 @@ class Maze:
 			return 3 # down
 		d2 = pos1[1] - pos2[1]
 		if d2 == 1:
-			return 2 # right
+			return 4 # right
 		if d2 == -1:
-			return 4 # left
+			return 2 # left
 		print("[wrn] this shouldn't happen (couldn't determine direction of tile)")
 		return None
 
@@ -329,7 +329,7 @@ if __name__ == '__main__':
 
 	
 	midf = MazeIdentifier()
-	midf.putMaze( (1, 0), (2, 5), Maze(t1, name="maze1") )
+	midf.putMaze( (1, 0), (2, 5), Maze(m1, name="maze1") )
 	maze1 = midf.getMaze( (2, 5), (1, 0) )
 	maze1.showAdjacency()
 	maze1.show(MazeDisplayer())
@@ -340,7 +340,9 @@ if __name__ == '__main__':
 	print( Maze.dirs[maze1.direction( (2, 4), (2, 3) )] )
 	compare_solvers(maze1, BDFSSolver(True), BDFSSolver(False))
 
-	# instructions = [ Maze.dirs[Maze.direction(edge[0], edge[1])] for edge in MazeSolver.pathAsEdges( BDFSSolver().solve(maze1, p1, p2) ) ]
-	print("way from " + str(p1) + " to " + str(p2) + " is " +str( instructions ) )
+	instructions = [ Maze.dirs[Maze.direction(edge[0], edge[1])] for edge in MazeSolver.pathAsEdges( BDFSSolver().solve(maze1, p1, p2) ) ]
+	print("unweighted distance is " + str(len(instructions)) + " from " + str(p1) + " to " + str(p2) + " by following directions " +str( instructions ) )
+
+	
 	
 	
