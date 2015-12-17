@@ -183,7 +183,7 @@ class Maze:
 						self.addToAdjacency( (row, col), (row+1, col) )
 
 	def valid(self, pos):
-		return pos[0] < self._size and pos[1] < self._size
+		return 0 <= pos[0] < self._size and 0 <= pos[1] < self._size
 
 	def hasAdjacent(self, pos1, pos2):
 		if pos1 not in self._adjacency:
@@ -342,7 +342,3 @@ if __name__ == '__main__':
 
 	instructions = [ Maze.dirs[Maze.direction(edge[0], edge[1])] for edge in MazeSolver.pathAsEdges( BDFSSolver().solve(maze1, p1, p2) ) ]
 	print("unweighted distance is " + str(len(instructions)) + " from " + str(p1) + " to " + str(p2) + " by following directions " +str( instructions ) )
-
-	
-	
-	
