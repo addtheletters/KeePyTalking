@@ -49,6 +49,8 @@ class MazeIdentifier:
 		self.mazes = {}
 
 	def putMaze(self, dot1, dot2, maze):
+		if self.getMaze(dot1, dot2):
+			print("Overwriting maze (" + maze.getName() + ") in maze identifier")
 		self.mazes[(dot1, dot2)] = maze
 
 	def getMaze(self, dot1, dot2):
@@ -182,6 +184,38 @@ class Maze:
 					#	print("used " + slines[i][j] + " of coords " + str((i, j)) + " at " + str( (row, col)) + "'s bottom" )
 						self.addToAdjacency( (row, col), (row+1, col) )
 
+	def _displayString(self, disp):
+		out = ""
+		out += disp.mazeCap(self) + "\n"
+		for i in range(0, self._size + self._size - 1):
+			rowout = ""
+			row = i // 2
+			if i % 2 == 0:
+				rowout = disp.v_wall
+				for col in range(0, self._size):
+					rowout += disp.tile
+					if col < self._size-1:
+						if self.hasAdjacent((row, col), (row, col+1)):
+							rowout += disp.gap
+						else:
+							rowout += disp.v_wall
+					else: # right wall
+						rowout += disp.v_wall
+			else:
+				rowout = disp.v_wall
+				for col in range(0, self._size):
+					if self.hasAdjacent((row, col), (row+1, col)):
+						rowout += disp.gap
+					else: 
+						rowout += disp.h_wall
+					if col < self._size-1:
+						rowout += disp.cross
+					else: # right wall
+						rowout += disp.v_wall
+			out += rowout + "\n"
+		out += disp.mazeCap(self)
+		return out
+
 	def valid(self, pos):
 		return 0 <= pos[0] < self._size and 0 <= pos[1] < self._size
 
@@ -219,34 +253,7 @@ class Maze:
 
 	def show(self, disp): # disp: MazeDisplayer
 		print(disp.mazeHeader(self))
-		print(disp.mazeCap(self))
-		for i in range(0, self._size + self._size - 1):
-			rowout = ""
-			row = i // 2
-			if i % 2 == 0:
-				rowout = disp.v_wall
-				for col in range(0, self._size):
-					rowout += disp.tile
-					if col < self._size-1:
-						if self.hasAdjacent((row, col), (row, col+1)):
-							rowout += disp.gap
-						else:
-							rowout += disp.v_wall
-					else: # right wall
-						rowout += disp.v_wall
-			else:
-				rowout = disp.v_wall
-				for col in range(0, self._size):
-					if self.hasAdjacent((row, col), (row+1, col)):
-						rowout += disp.gap
-					else: 
-						rowout += disp.h_wall
-					if col < self._size-1:
-						rowout += disp.cross
-					else: # right wall
-						rowout += disp.v_wall
-			print(rowout)
-		print(disp.mazeCap(self))
+		print(self._displayString(disp))
 		print(disp.mazeFooter(self))
 
 
@@ -283,6 +290,147 @@ def compare_solvers(maze, solver1, solver2):
 	print(solver2.id() + " won " + str(wins_2) + " times, taking " + str(round(time_2,10)) + " arbitrary time units (seconds)")
 
 
+def build_m1_identifier():
+	m1 = '''
+*.*.*|*.*.*
+.+-+.+.+-+-
+*|*.*|*.*.*
+.+.+-+-+-+.
+*|*.*|*.*.*
+.+-+.+.+-+.
+*|*.*.*|*.*
+.+-+-+-+-+.
+*.*.*|*.*|*
+.+-+.+.+-+.
+*.*|*.*|*.*
+'''
+
+	m2 = '''
+*.*.*|*.*.*
+-+.+-+.+.+-
+*.*|*.*|*.*
+.+-+.+-+-+.
+*|*.*|*.*.*
+.+.+-+.+-+.
+*.*|*.*|*|*
+.+-+.+-+.+.
+*|*|*|*.*|*
+.+.+.+.+-+.
+*|*.*|*.*.*
+'''
+
+	m3 = '''
+*.*.*|*|*.*
+.+-+.+.+.+.
+*|*|*|*.*|*
+-+.+.+-+-+.
+*.*|*|*.*|*
+.+.+.+.+.+.
+*|*|*|*|*|*
+.+.+.+.+.+.
+*|*.*|*|*|*
+.+-+-+.+.+.
+*.*.*.*|*.*
+'''
+
+	m4 = '''
+*.*|*.*.*.*
+.+.+-+-+-+.
+*|*|*.*.*.*
+.+.+.+-+-+.
+*|*.*|*.*|*
+.+-+-+.+-+.
+*|*.*.*.*.*
+.+-+-+-+-+.
+*.*.*.*.*|*
+.+-+-+-+.+.
+*.*.*|*.*|*
+'''
+
+	m5 = '''
+*.*.*.*.*.*
+-+-+-+-+.+.
+*.*.*.*.*|*
+.+-+-+.+-+-
+*.*|*.*|*.*
+.+.+-+-+.+.
+*|*.*.*|*|*
+.+-+-+.+-+.
+*|*.*.*.*|*
+.+.+-+-+-+.
+*|*.*.*.*.*
+'''
+
+	m6 = '''
+*|*.*|*.*.*
+.+.+.+-+.+.
+*|*|*|*.*|*
+.+.+.+.+-+.
+*.*|*|*|*.*
+.+-+-+.+.+-
+*.*|*.*|*|*
+-+.+.+.+.+.
+*.*|*|*|*.*
+.+-+-+.+-+.
+*.*.*.*|*.*
+'''
+
+	m7 = '''
+*.*.*.*|*.*
+.+-+-+.+.+.
+*|*.*|*.*|*
+.+.+-+-+-+.
+*.*|*.*|*.*
+-+-+.+-+.+-
+*.*|*.*.*|*
+.+.+.+-+-+.
+*|*|*.*.*|*
+.+-+-+-+.+.
+*.*.*.*.*.*
+'''
+
+	m8 = '''
+*|*.*.*|*.*
+.+.+-+.+.+.
+*.*.*|*.*|*
+.+-+-+-+-+.
+*|*.*.*.*|*
+.+.+-+-+.+.
+*|*.*|*.*.*
+.+-+.+-+-+-
+*|*|*.*.*.*
+.+.+-+-+-+-
+*.*.*.*.*.*
+'''
+
+	m9 = '''
+*|*.*.*.*.*
+.+.+-+-+.+.
+*|*|*.*|*|*
+.+.+.+-+.+.
+*.*.*|*.*|*
+.+-+-+.+-+.
+*|*|*.*|*.*
+.+.+.+-+-+.
+*|*|*|*.*|*
+.+.+.+.+.+-
+*.*|*.*|*.*
+'''
+
+	midf = MazeIdentifier()
+	midf.putMaze( (1, 0), (2, 5), Maze(m1, name="maze1") )
+	midf.putMaze( (3, 1), (1, 4), Maze(m2, name="maze2") )
+	midf.putMaze( (3, 3), (3, 5), Maze(m3, name="maze3") )
+	midf.putMaze( (0, 0), (3, 0), Maze(m4, name="maze4") )
+	midf.putMaze( (2, 4), (5, 3), Maze(m5, name="maze5") )
+	midf.putMaze( (0, 4), (4, 2), Maze(m6, name="maze6") )
+	midf.putMaze( (0, 1), (5, 1), Maze(m7, name="maze7") )
+	midf.putMaze( (0, 3), (3, 2), Maze(m8, name="maze8") )
+	midf.putMaze( (1, 2), (4, 0), Maze(m9, name="maze9") )
+
+	return midf
+
+
 if __name__ == '__main__':
 
 	what = '''
@@ -299,20 +447,6 @@ if __name__ == '__main__':
 *.*.*.*.*.*
 '''
 
-	m1 = '''
-*.*.*|*.*.*
-.+-+.+.+-+-
-*|*.*|*.*.*
-.+.+-+-+-+.
-*|*.*|*.*.*
-.+-+.+.+-+.
-*|*.*.*|*.*
-.+-+-+-+-+.
-*.*.*|*.*|*
-.+-+.+.+-+.
-*.*|*.*|*.*
-'''
-
 	t1 = '''
 *.*.*|*.*.*
 .+-+.+.+-+-
@@ -326,11 +460,9 @@ if __name__ == '__main__':
 .+-+.+.+.+.
 *.*|*.*|*.*
 '''
-
+	midf = build_m1_identifier()
 	
-	midf = MazeIdentifier()
-	midf.putMaze( (1, 0), (2, 5), Maze(m1, name="maze1") )
-	maze1 = midf.getMaze( (2, 5), (1, 0) )
+	maze1 = midf.getMaze( (4, 0), (1, 2) )
 	maze1.showAdjacency()
 	maze1.show(MazeDisplayer())
 
