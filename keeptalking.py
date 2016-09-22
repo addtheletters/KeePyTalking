@@ -405,8 +405,7 @@ def mazeModule():
         if not found:
             print("Could not find maze with those indicators, try again or exit with 'x'.")
 
-    found.show()
-
+    found.show(rulers=True)
     startR = input("Enter row of start: ").strip().replace(" ", "")
     startC = input("Enter column of start: ").strip().replace(" ", "")
     endR = input("Enter row of end: ").strip().replace(" ", "")
