@@ -281,7 +281,7 @@ class Maze:
 					print( str((i, j)) + ": No adjacent vertices. :(")
 	
 	def show(self, displayer=MazeDisplayer(), rulers=False, highlight=False):
-		displayer.show(self)
+		displayer.show(self, rulers=rulers, highlight=highlight)
 
 def compare_solvers(maze, solver1, solver2):
 	wins_1 = 0
