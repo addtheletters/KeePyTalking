@@ -1,4 +1,4 @@
-# mazes are 6 by 6 grids
+ # mazes are 6 by 6 grids
 # should be representable using adjacency matrix
 
 # 0 1 2 3
@@ -47,23 +47,23 @@ class MazeDisplayer:
 			return self.highlights[pos]
 		return self.tile
 
-	def mazeBody(self, maze):
+	def mazeBody(self, maze, rulers=False, highlight=True):
 		out = ""
-		out += self.mazeCap(maze) + "\n"
+		out += self.mazeCap(maze) + (" v row" if rulers else "") + "\n"
 		for i in range(0, maze._size + maze._size - 1):
 			rowout = ""
 			row = i // 2
 			if i % 2 == 0:
 				rowout = self.v_wall
 				for col in range(0, maze._size):
-					rowout += self.getTile((row, col))
+					rowout += self.getTile((row, col)) if highlight else self.tile
 					if col < maze._size-1:
 						if maze.hasAdjacent((row, col), (row, col+1)):
 							rowout += self.gap
 						else:
 							rowout += self.v_wall
 					else: # right wall
-						rowout += self.v_wall
+						rowout += self.v_wall + ((" " + str(row)) if rulers else "")
 			else:
 				rowout = self.v_wall
 				for col in range(0, maze._size):
@@ -79,9 +79,11 @@ class MazeDisplayer:
 		out += self.mazeCap(maze)
 		return out
 
-	def show(self, maze):
+	def show(self, maze, rulers=True, highlight=True):
 		print(self.mazeHeader(maze))
-		print(self.mazeBody(maze))
+		if rulers:
+			print( ' ' + ' '.join([str(x) for x in range(0,maze.getSize())]) + "  < column" )
+		print(self.mazeBody(maze, rulers, highlight))
 		print(self.mazeFooter(maze))
 
 class MazeIdentifier:
@@ -121,6 +123,10 @@ class MazeSolver:
 		for i in range(len(path)-1):
 			edges.append( (path[i], path[i+1]) )
 		return edges
+		
+	@staticmethod
+	def buildInstructions(solution):
+		return [ Maze.dirs[Maze.direction(edge[0], edge[1])] for edge in MazeSolver.pathAsEdges( solution ) ]
 
 	def id(self):
 		raise NotImplementedError("MazeSolver is abstract, provide an ID")
@@ -132,6 +138,10 @@ class MazeSolver:
 		# first should be src, last should be dst
 		# with an existing edge from each to the following list element
 		raise NotImplementedError("MazeSolver is abstract, use an implementation of it")
+
+	def readablySolve(self, maze, src, dst):
+		return MazeSolver.buildInstructions( self.solve(maze, src, dst) )
+
 
 class BDFSSolver(MazeSolver):
 	def __init__(self, bfs=True):
@@ -145,10 +155,10 @@ class BDFSSolver(MazeSolver):
 
 	def solve(self, maze, src, dst):
 		if not maze.valid(src):
-			print("Start was not inside maze.")
+			print("[err] Start was not inside maze.")
 			return None
 		if not maze.valid(dst):
-			print("End was not inside maze.")
+			print("[err] End was not inside maze.")
 			return None
 
 		adj = maze.getAdjacency()
@@ -270,7 +280,7 @@ class Maze:
 				else:
 					print( str((i, j)) + ": No adjacent vertices. :(")
 	
-	def show(self, displayer=MazeDisplayer()):
+	def show(self, displayer=MazeDisplayer(), rulers=False, highlight=False):
 		displayer.show(self)
 
 def compare_solvers(maze, solver1, solver2):
@@ -450,16 +460,14 @@ def build_m1_identifier():
 	midf.putMaze( (1, 2), (4, 0), Maze(m9, name="maze9") )
 	return midf
 
-# Prints solution to the maze in easy readable form.
+# Shows maze, then gets solution to the maze in easy readable form.
 # maze: the Maze object to solve
 # start: start position, integer coordinate tuple
 # end:	ending position, integer coordinate tuple
 # solver: MazeSolver to use
 def getSolutionInstructions(maze, start, end, solver=BDFSSolver()):
-	displayer = MazeDisplayer({start:"S",end:"E"})
-	displayer.show(maze)
-	instructions = [ Maze.dirs[Maze.direction(edge[0], edge[1])] for edge in MazeSolver.pathAsEdges( solver.solve(maze, start, end) ) ]
-	return instructions
+	MazeDisplayer({start:"S",end:"E"}).show(maze)
+	return solver.readablySolve(maze, start, end)
 	#print("unweighted distance is " + str(len(instructions)) + " from " + str(start) + " to " + str(end) + " by following directions " +str( instructions ) )
 
 if __name__ == '__main__':
