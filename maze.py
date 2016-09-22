@@ -11,20 +11,11 @@
 # mazes are identifiable using 2 dots
 # 9 mazes exist
 
-
-class Highlight:
-	def __init__(self, pos, char):
-		self._pos = pos
-		if len(char) == 1:
-			self._char = char
-		else:
-			self._char = char[0]
-
-# TODO: implement displayer so Highlight can make particular cells stand out
-# TODO: move 'show' function to MazeDisplayer
+from collections import deque
+import time
 
 class MazeDisplayer:
-	def __init__(self):
+	def __init__(self, highlights={}):
 		self.v_wall = "|" # vertical wall
 		self.h_wall = "-" # horizontal wall
 		self.gap    = "." # lack of a wall
@@ -33,6 +24,14 @@ class MazeDisplayer:
 		self.header = "="
 		self.header_size = 40
 		self.header_end  = 5
+		self.highlights = highlights
+
+	def addHighlight(pos, char):
+		if len(char) > 1:
+			char = char[0]
+		if len(char) < 1:
+			char = " "
+		self.highlights[pos] = char
 
 	def mazeHeader(self, maze):
 		return self.header * (self.header_size-len(maze.getName())-self.header_end) + maze.getName() + self.header * (self.header_end)
@@ -43,6 +42,47 @@ class MazeDisplayer:
 	def mazeCap(self, maze):
 		return self.cross + (self.h_wall * (maze.getSize() * 2 - 1)) + self.cross
 
+	def getTile(self, pos):
+		if pos in self.highlights:
+			return self.highlights[pos]
+		return self.tile
+
+	def mazeBody(self, maze):
+		out = ""
+		out += self.mazeCap(maze) + "\n"
+		for i in range(0, maze._size + maze._size - 1):
+			rowout = ""
+			row = i // 2
+			if i % 2 == 0:
+				rowout = self.v_wall
+				for col in range(0, maze._size):
+					rowout += self.getTile((row, col))
+					if col < maze._size-1:
+						if maze.hasAdjacent((row, col), (row, col+1)):
+							rowout += self.gap
+						else:
+							rowout += self.v_wall
+					else: # right wall
+						rowout += self.v_wall
+			else:
+				rowout = self.v_wall
+				for col in range(0, maze._size):
+					if maze.hasAdjacent((row, col), (row+1, col)):
+						rowout += self.gap
+					else: 
+						rowout += self.h_wall
+					if col < maze._size-1:
+						rowout += self.cross
+					else: # right wall
+						rowout += self.v_wall
+			out += rowout + "\n"
+		out += self.mazeCap(maze)
+		return out
+
+	def show(self, maze):
+		print(self.mazeHeader(maze))
+		print(self.mazeBody(maze))
+		print(self.mazeFooter(maze))
 
 class MazeIdentifier:
 	def __init__(self):
@@ -61,7 +101,11 @@ class MazeIdentifier:
 		else:
 			return None
 
-from collections import deque
+	def getMazeAt(self, index):
+		mazecount = len(self.mazes.keys())
+		if index < mazecount:
+			return self.mazes[list(self.mazes.keys())[index]]
+		return None
 
 class MazeSolver:
 	@staticmethod
@@ -100,6 +144,13 @@ class BDFSSolver(MazeSolver):
 			return "DFS"
 
 	def solve(self, maze, src, dst):
+		if not maze.valid(src):
+			print("Start was not inside maze.")
+			return None
+		if not maze.valid(dst):
+			print("End was not inside maze.")
+			return None
+
 		adj = maze.getAdjacency()
 		visited = set() # where have we looed / enqueued?
 		prev = {} # where did we come from to get to the index?
@@ -184,38 +235,6 @@ class Maze:
 					#	print("used " + slines[i][j] + " of coords " + str((i, j)) + " at " + str( (row, col)) + "'s bottom" )
 						self.addToAdjacency( (row, col), (row+1, col) )
 
-	def _displayString(self, disp):
-		out = ""
-		out += disp.mazeCap(self) + "\n"
-		for i in range(0, self._size + self._size - 1):
-			rowout = ""
-			row = i // 2
-			if i % 2 == 0:
-				rowout = disp.v_wall
-				for col in range(0, self._size):
-					rowout += disp.tile
-					if col < self._size-1:
-						if self.hasAdjacent((row, col), (row, col+1)):
-							rowout += disp.gap
-						else:
-							rowout += disp.v_wall
-					else: # right wall
-						rowout += disp.v_wall
-			else:
-				rowout = disp.v_wall
-				for col in range(0, self._size):
-					if self.hasAdjacent((row, col), (row+1, col)):
-						rowout += disp.gap
-					else: 
-						rowout += disp.h_wall
-					if col < self._size-1:
-						rowout += disp.cross
-					else: # right wall
-						rowout += disp.v_wall
-			out += rowout + "\n"
-		out += disp.mazeCap(self)
-		return out
-
 	def valid(self, pos):
 		return 0 <= pos[0] < self._size and 0 <= pos[1] < self._size
 
@@ -250,14 +269,9 @@ class Maze:
 					print( str((i, j)) + ": " + str( self._adjacency[(i, j)] ))
 				else:
 					print( str((i, j)) + ": No adjacent vertices. :(")
-
-	def show(self, disp): # disp: MazeDisplayer
-		print(disp.mazeHeader(self))
-		print(self._displayString(disp))
-		print(disp.mazeFooter(self))
-
-
-import time
+	
+	def show(self, displayer=MazeDisplayer()):
+		displayer.show(self)
 
 def compare_solvers(maze, solver1, solver2):
 	wins_1 = 0
@@ -265,6 +279,8 @@ def compare_solvers(maze, solver1, solver2):
 
 	time_1 = 0
 	time_2 = 0
+
+	ties = 0
 
 	print("starting test showdown between " + solver1.id() + " and " + solver2.id())
 	for x1 in range(6):
@@ -280,14 +296,19 @@ def compare_solvers(maze, solver1, solver2):
 					time_1 += s_middle - s1_start
 					time_2 += s2_end - s_middle
 
+					#print(len(s1),s1)
+					#print(len(s2),s2)
 					if len(s1) != len(s2):
 						if len(s1) < len(s2):
 							wins_1 += 1
 						else:
 							wins_2 += 1
+					else:
+						ties += 1
 	print("done")
 	print(solver1.id() + " won " + str(wins_1) + " times, taking " + str(round(time_1,10)) + " arbitrary time units (seconds)")
 	print(solver2.id() + " won " + str(wins_2) + " times, taking " + str(round(time_2,10)) + " arbitrary time units (seconds)")
+	print("Solvers tied " + str(ties) + " times.")
 
 
 def build_m1_identifier():
@@ -427,9 +448,19 @@ def build_m1_identifier():
 	midf.putMaze( (0, 1), (5, 1), Maze(m7, name="maze7") )
 	midf.putMaze( (0, 3), (3, 2), Maze(m8, name="maze8") )
 	midf.putMaze( (1, 2), (4, 0), Maze(m9, name="maze9") )
-
 	return midf
 
+# Prints solution to the maze in easy readable form.
+# maze: the Maze object to solve
+# start: start position, integer coordinate tuple
+# end:	ending position, integer coordinate tuple
+# solver: MazeSolver to use
+def getSolutionInstructions(maze, start, end, solver=BDFSSolver()):
+	displayer = MazeDisplayer({start:"S",end:"E"})
+	displayer.show(maze)
+	instructions = [ Maze.dirs[Maze.direction(edge[0], edge[1])] for edge in MazeSolver.pathAsEdges( solver.solve(maze, start, end) ) ]
+	return instructions
+	#print("unweighted distance is " + str(len(instructions)) + " from " + str(start) + " to " + str(end) + " by following directions " +str( instructions ) )
 
 if __name__ == '__main__':
 
@@ -462,15 +493,16 @@ if __name__ == '__main__':
 '''
 	midf = build_m1_identifier()
 	
-	maze1 = midf.getMaze( (4, 0), (1, 2) )
-	maze1.showAdjacency()
-	maze1.show(MazeDisplayer())
+	maze1 = midf.getMazeAt(0)#( (4, 0), (1, 2) )
+	#maze1.showAdjacency()
+	#MazeDisplayer().show(maze1)
+	#maze1.show() # does same thing as MazeDisplayer().show(maze1)
 
 	p1 = (1, 1)
 	p2 = (4, 5)
 
-	print( Maze.dirs[maze1.direction( (2, 4), (2, 3) )] )
-	compare_solvers(maze1, BDFSSolver(True), BDFSSolver(False))
+	#print( Maze.dirs[maze1.direction( (2, 4), (2, 3) )] )
+	#compare_solvers(maze1, BDFSSolver(True), BDFSSolver(False))
 
-	instructions = [ Maze.dirs[Maze.direction(edge[0], edge[1])] for edge in MazeSolver.pathAsEdges( BDFSSolver().solve(maze1, p1, p2) ) ]
+	instructions = getSolutionInstructions(maze1, p1, p2) #[ Maze.dirs[Maze.direction(edge[0], edge[1])] for edge in MazeSolver.pathAsEdges( BDFSSolver().solve(maze1, p1, p2) ) ]
 	print("unweighted distance is " + str(len(instructions)) + " from " + str(p1) + " to " + str(p2) + " by following directions " +str( instructions ) )
